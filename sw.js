@@ -1,4 +1,4 @@
-const CACHE_NAME = "suhas-remember-rocket-v2";
+const CACHE_NAME = "suhas-remember-rocket-v3";
 const APP_SHELL = [
   "./",
   "./index.html",

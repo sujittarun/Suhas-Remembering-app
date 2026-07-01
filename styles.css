@@ -158,9 +158,10 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 
 .app-header {
   position: relative;
+  width: 100%;
   min-width: 0;
-  max-width: min(78%, 900px, calc(20.5svh * 3.6));
-  margin-inline: auto;
+  max-width: 100%;
+  margin-inline: 0;
 }
 
 .header-art-frame {
