@@ -3,205 +3,194 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#12b7f3" />
+    <meta name="theme-color" content="#22a7ff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Suhas Memory Pad" />
     <title>Suhas Memory Pad</title>
     <link rel="icon" href="./assets/memory-pad-icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./styles.css?v=tablet-redesign-3" />
+    <link rel="stylesheet" href="./styles.css?v=header-art-1" />
   </head>
   <body>
     <div class="sky" aria-hidden="true">
-      <span class="star star-a"></span>
-      <span class="star star-b"></span>
-      <span class="star star-c"></span>
-      <span class="star star-d"></span>
-      <span class="star star-e"></span>
-      <span class="star star-f"></span>
-      <span class="planet planet-a"></span>
-      <span class="planet planet-b"></span>
-      <span class="cloud cloud-a"></span>
-      <span class="cloud cloud-b"></span>
-      <span class="cloud cloud-c"></span>
-      <span class="cloud cloud-d"></span>
+      <span class="sky-layer sky-far">
+        <span class="star star-a"></span>
+        <span class="star star-b"></span>
+        <span class="star star-c"></span>
+        <span class="star star-d"></span>
+        <span class="star star-e"></span>
+        <span class="star star-f"></span>
+        <span class="planet planet-a"></span>
+        <span class="planet planet-b"></span>
+      </span>
+      <span class="sky-layer sky-near">
+        <span class="cloud cloud-a"></span>
+        <span class="cloud cloud-b"></span>
+        <span class="cloud cloud-c"></span>
+        <span class="cloud cloud-d"></span>
+      </span>
       <span class="sparkle-path"></span>
     </div>
 
     <main class="app-shell" id="appShell">
-      <section class="hero-panel" aria-labelledby="appTitle">
+      <section class="device-card" id="deviceCard" aria-labelledby="appTitle">
         <header class="app-header">
-          <div class="brand-strip">
-            <div class="brand-mascot-frame" aria-hidden="true">
-              <span class="mascot-face">🧠</span>
+          <h1 id="appTitle" class="sr-only">Suhas Memory Pad</h1>
+          <div class="header-art-frame">
+            <picture>
+              <source
+                srcset="./assets/header-suhas-memory-pad-960.png 960w, ./assets/header-suhas-memory-pad-1400.png 1400w, ./assets/header-suhas-memory-pad.png 1857w"
+                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 80px, 960px)"
+              />
+              <img
+                class="header-art"
+                src="./assets/header-suhas-memory-pad-1400.png"
+                width="1857"
+                height="847"
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                fetchpriority="high"
+              />
+            </picture>
+
+            <div class="header-actions">
+              <button class="round-action" id="soundButton" type="button" aria-pressed="true" aria-label="Turn voice on or off">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+                  <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+                  <path d="M18.8 6.2a8 8 0 0 1 0 11.6"></path>
+                </svg>
+              </button>
+              <button class="round-action" id="bellButton" type="button" aria-label="Turn on reminder bell">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                  <path d="M10 21h4"></path>
+                </svg>
+              </button>
             </div>
-            <div class="brand-copy">
-              <h1 id="appTitle">
-                <span>Suhas</span>
-                <span>Memory Pad</span>
-              </h1>
-              <div class="brand-sparks" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-            <div class="memory-orbit" aria-hidden="true">
-              <span class="orbit-ring"></span>
-              <span class="orbit-icon orbit-icon-a">☀️</span>
-              <span class="orbit-icon orbit-icon-b">🔁</span>
-              <span class="orbit-icon orbit-icon-c">🎂</span>
-              <span class="orbit-rocket"></span>
-            </div>
-          </div>
-          <div class="header-actions">
-            <button class="round-action" id="soundButton" type="button" aria-pressed="true" aria-label="Turn voice on or off">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
-                <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
-                <path d="M18.8 6.2a8 8 0 0 1 0 11.6"></path>
-              </svg>
-            </button>
-            <button class="round-action" id="bellButton" type="button" aria-label="Turn on reminder bell">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-                <path d="M10 21h4"></path>
-              </svg>
-            </button>
           </div>
         </header>
 
-        <div class="tablet-grid">
-          <section class="composer-card" aria-labelledby="composerTitle">
-            <div class="composer-content">
-              <div class="section-title">
-                <span class="title-badge" aria-hidden="true">💡</span>
-                <h2 id="composerTitle">What should I remember?</h2>
-              </div>
-              <div class="memory-input-wrap">
-                <input
-                  id="memoryInput"
-                  type="text"
-                  autocomplete="off"
-                  maxlength="48"
-                  placeholder="Type or talk..."
-                  aria-label="What should I remember?"
-                />
-                <button class="mic-button" id="micButton" type="button" aria-label="Speak a memory">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"></path>
-                    <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
-                    <path d="M12 19v3"></path>
-                    <path d="M8 22h8"></path>
-                  </svg>
-                </button>
-              </div>
-
-              <div class="icon-picker" aria-label="Choose picture">
-                <button class="icon-chip is-selected" type="button" data-icon="cap" aria-label="Cap picture">🧢</button>
-                <button class="icon-chip" type="button" data-icon="tooth" aria-label="Tooth picture">🪥</button>
-                <button class="icon-chip" type="button" data-icon="cricket" aria-label="Cricket picture">🏏</button>
-                <button class="icon-chip" type="button" data-icon="bottle" aria-label="Bottle picture">💧</button>
-                <button class="icon-chip" type="button" data-icon="book" aria-label="Book picture">📘</button>
-                <button class="icon-chip" type="button" data-icon="bag" aria-label="School bag picture">🎒</button>
-                <button class="icon-chip" type="button" data-icon="ball" aria-label="Ball picture">⚽</button>
-                <button class="icon-chip" type="button" data-icon="star" aria-label="Star picture">⭐</button>
-                <button class="icon-chip" type="button" data-icon="notebook" aria-label="Notebook picture">📒</button>
-                <button class="icon-chip" type="button" data-icon="pencil" aria-label="Pencil picture">✏️</button>
-              </div>
-
-              <div class="time-grid" aria-label="Choose reminder time">
-                <button class="time-tile is-selected" type="button" data-reminder="none">
-                  <span class="tile-art save-art"></span>
-                  <strong>Just Save</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="today">
-                  <span class="tile-art sun-art"></span>
-                  <strong>Today</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="tomorrow">
-                  <span class="tile-art hill-art"></span>
-                  <strong>Tomorrow</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="bedtime">
-                  <span class="tile-art moon-art"></span>
-                  <strong>Bedtime</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="daily">
-                  <span class="tile-art daily-art"></span>
-                  <strong>Daily</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="yearly">
-                  <span class="tile-art yearly-art"></span>
-                  <strong>Yearly</strong>
-                </button>
-                <button class="time-tile" type="button" data-reminder="custom">
-                  <span class="tile-art custom-art"></span>
-                  <strong>Pick Time</strong>
-                </button>
-              </div>
-
-              <div class="schedule-panel" id="schedulePanel" hidden>
-                <label id="scheduleLabel" for="customDateTime">Pick date and time</label>
-                <div class="schedule-input-wrap">
-                  <span aria-hidden="true">⏰</span>
-                  <input id="customDateTime" type="datetime-local" aria-label="Pick reminder date and time" />
-                </div>
-              </div>
-
-              <button class="add-button" id="addButton" type="button">
-                <span class="button-plus">+</span>
-                <span>Add Memory</span>
-                <span class="button-rocket" aria-hidden="true"></span>
-              </button>
-            </div>
-          </section>
-
-          <section class="memories-panel" aria-labelledby="memoriesTitle">
-            <div class="panel-top">
-              <div class="section-title">
-                <span class="title-badge" aria-hidden="true">📋</span>
-                <div>
-                <h2 id="memoriesTitle">My Memories</h2>
-                <p id="memoryCount">3 things saved</p>
-                </div>
-              </div>
-              <button class="ask-button" id="askButton" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3l2.2 5 5.4.6-4 3.7 1.1 5.3L12 14.9 7.3 17.6l1.1-5.3-4-3.7 5.4-.6L12 3z"></path>
-                </svg>
-                Ask Buddy
-              </button>
-            </div>
-            <div class="due-banner" id="dueBanner" hidden>
-              <div class="due-pulse" aria-hidden="true"></div>
-              <div>
-                <strong>Buddy remembers!</strong>
-                <span id="dueText"></span>
-              </div>
-              <button id="hearDueButton" type="button">Tell me</button>
-            </div>
-            <div class="memory-list" id="memoryList" aria-live="polite"></div>
-          </section>
+        <div class="memory-search" id="memorySearch">
+          <button class="picture-badge" id="pictureBadge" type="button" aria-label="Pick a picture">
+            <span id="pictureGlyph">⭐</span>
+          </button>
+          <input
+            id="memoryInput"
+            type="text"
+            autocomplete="off"
+            maxlength="48"
+            placeholder="What do you want to remember?"
+            aria-label="What do you want to remember?"
+          />
+          <button class="mic-button" id="micButton" type="button" aria-label="Speak a memory">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"></path>
+              <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
+              <path d="M12 19v3"></path>
+              <path d="M8 22h8"></path>
+            </svg>
+          </button>
         </div>
+
+        <div class="category-rail" id="categoryRail" aria-label="Choose when to remember">
+          <button class="cat-tile is-selected" type="button" data-reminder="none" style="--cat: #2c96ff; --cat-soft: #e6f2ff;">
+            <span class="cat-art">📦</span>
+            <strong>Just Save</strong>
+          </button>
+          <button class="cat-tile" type="button" data-reminder="today" style="--cat: #f7a919; --cat-soft: #fff3d6;">
+            <span class="cat-art">☀️</span>
+            <strong>Today</strong>
+          </button>
+          <button class="cat-tile" type="button" data-reminder="tomorrow" style="--cat: #35bd6c; --cat-soft: #e2f7ea;">
+            <span class="cat-art">🌄</span>
+            <strong>Tomorrow</strong>
+          </button>
+          <button class="cat-tile" type="button" data-reminder="daily" style="--cat: #29a9f2; --cat-soft: #e2f4ff;">
+            <span class="cat-art">🔁</span>
+            <strong>Daily</strong>
+          </button>
+          <button class="cat-tile" type="button" data-reminder="yearly" style="--cat: #8b6bff; --cat-soft: #eee9ff;">
+            <span class="cat-art">🎂</span>
+            <strong>Yearly</strong>
+          </button>
+          <button class="cat-tile" type="button" data-reminder="custom" style="--cat: #ff5a8a; --cat-soft: #ffe4ee;">
+            <span class="cat-art">🕐</span>
+            <strong>Pick Time</strong>
+          </button>
+        </div>
+
+        <div class="schedule-panel" id="schedulePanel" hidden>
+          <label id="scheduleLabel" for="customDateTime">Pick date and time</label>
+          <div class="schedule-input-wrap">
+            <span aria-hidden="true">⏰</span>
+            <input id="customDateTime" type="datetime-local" aria-label="Pick reminder date and time" />
+          </div>
+        </div>
+
+        <div class="memories-head">
+          <div class="head-title">
+            <h2 id="memoriesTitle">My Memories</h2>
+            <span class="head-star" aria-hidden="true">⭐</span>
+            <p id="memoryCount">0 things saved</p>
+          </div>
+          <button class="ask-button" id="askButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3l2.2 5 5.4.6-4 3.7 1.1 5.3L12 14.9 7.3 17.6l1.1-5.3-4-3.7 5.4-.6L12 3z"></path>
+            </svg>
+            <span>Ask Buddy</span>
+          </button>
+        </div>
+
+        <div class="due-banner" id="dueBanner" hidden>
+          <div class="due-pulse" aria-hidden="true"></div>
+          <div class="due-copy">
+            <strong>Buddy remembers!</strong>
+            <span id="dueText"></span>
+          </div>
+          <button id="hearDueButton" type="button">Tell me</button>
+        </div>
+
+        <div class="memory-rail-wrap">
+          <button class="rail-nav rail-prev" id="railPrev" type="button" aria-label="See earlier memories">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+          </button>
+          <div class="memory-rail" id="memoryList" aria-live="polite"></div>
+          <button class="rail-nav rail-next" id="railNext" type="button" aria-label="See more memories">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+          </button>
+        </div>
+
+        <button class="add-button" id="addButton" type="button">
+          <span class="button-plus">+</span>
+          <span class="button-label">Add Memory</span>
+          <span class="button-wand" aria-hidden="true">✨</span>
+        </button>
       </section>
     </main>
+
+    <section class="picker-sheet" id="pickerSheet" aria-hidden="true">
+      <div class="sheet-backdrop" data-close-picker></div>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+        <button class="sheet-close" type="button" data-close-picker aria-label="Close picture picker">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>
+        </button>
+        <h2 id="pickerTitle">Pick a picture</h2>
+        <div class="picture-grid" id="pictureGrid" aria-label="Choose a picture"></div>
+      </div>
+    </section>
 
     <section class="recall-drawer" id="recallDrawer" aria-hidden="true">
       <div class="recall-backdrop" data-close-recall></div>
       <div class="recall-card" role="dialog" aria-modal="true" aria-labelledby="recallTitle">
         <button class="drawer-close" type="button" data-close-recall aria-label="Close Ask Buddy">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12"></path>
-            <path d="M18 6L6 18"></path>
-          </svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>
         </button>
-        <div class="drawer-mascot">
-          <span class="mascot-face">🧠</span>
-        </div>
+        <div class="drawer-mascot"><span class="mascot-face">🧠</span></div>
         <h2 id="recallTitle">What do you need?</h2>
         <div class="recall-search">
-          <input id="recallInput" type="search" placeholder="Try cricket, bottle, school..." aria-label="Search memories" />
+          <input id="recallInput" type="search" placeholder="Try football, water, book..." aria-label="Search memories" />
           <button class="mic-button recall-mic-button" id="recallMicButton" type="button" aria-label="Speak a search">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"></path>
@@ -216,6 +205,6 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=tablet-redesign-3" defer></script>
+    <script src="./app.js?v=header-art-1" defer></script>
   </body>
 </html>
