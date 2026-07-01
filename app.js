@@ -4,6 +4,7 @@ const SPEECH_DELAY_MS = 120;
 
 const SUPABASE_URL = "https://ugsklcipzyiogxynshnh.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Lrxh3RceGcj7g5JEefze_g_R-bMtAn3";
+const VAPID_PUBLIC_KEY = "BKwA35fDJRKOeCVQ2sXjPRDkwlhBXAYXSxsKfxpIYJMl9C-J41fEgly9Z6mgwEVssG7j_plItQEGUIcYsv2L2LI";
 const supabaseClient = window.supabase
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
@@ -110,6 +111,7 @@ let soundOn = true;
 let audioContext = null;
 let speechTimer = 0;
 let activeDueMemory = null;
+const spokenDueKeys = new Set();
 let memories = loadLocalCache().map(normalizeMemory);
 
 const input = document.querySelector("#memoryInput");
@@ -156,7 +158,9 @@ initMemories();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    navigator.serviceWorker.register("./sw.js").then((registration) => {
+      if (Notification.permission === "granted") ensurePushSubscription(registration);
+    }).catch(() => {});
   });
 }
 
@@ -898,6 +902,13 @@ function checkDueMemories() {
   if (!activeDueMemory) { dueBanner.hidden = true; return; }
   dueText.textContent = `Time for ${activeDueMemory.text}`;
   dueBanner.hidden = false;
+
+  const dueKey = `${activeDueMemory.id}:${activeDueMemory.dueAt}`;
+  if (!spokenDueKeys.has(dueKey)) {
+    spokenDueKeys.add(dueKey);
+    speak(`Remember ${activeDueMemory.text}`);
+  }
+
   if ("Notification" in window && Notification.permission === "granted" && activeDueMemory.notifiedForDueAt !== activeDueMemory.dueAt) {
     new Notification("Suhas Remember Rocket", { body: activeDueMemory.text, icon: "./assets/memory-pad-icon.svg" });
     activeDueMemory.notifiedForDueAt = activeDueMemory.dueAt;
@@ -910,10 +921,44 @@ function isDue(memory) {
 }
 async function requestNotifications() {
   if (!("Notification" in window)) { showToast("Bell is not supported here"); bellButton.classList.add("is-muted"); return; }
-  if (Notification.permission === "granted") { showToast("Bell is already on"); return; }
+  if (Notification.permission === "granted") {
+    showToast("Bell is already on");
+    ensurePushSubscription();
+    return;
+  }
   const permission = await Notification.requestPermission();
   bellButton.classList.toggle("is-muted", permission !== "granted");
   showToast(permission === "granted" ? "Reminder bell is on" : "Bell was not turned on");
+  if (permission === "granted") ensurePushSubscription();
+}
+
+/* ---------- Push notifications (fire even when the tab is closed) ---------- */
+async function ensurePushSubscription(registrationHint) {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !supabaseClient) return;
+  try {
+    const registration = registrationHint || (await navigator.serviceWorker.ready);
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    const json = subscription.toJSON();
+    await supabaseClient.from("push_subscriptions").upsert(
+      { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
+      { onConflict: "endpoint" }
+    );
+  } catch (err) {
+    console.warn("Could not set up push notifications", err);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
 /* ---------- Sound + feedback ---------- */
