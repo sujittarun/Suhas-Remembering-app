@@ -40,7 +40,7 @@
             <picture>
               <source
                 srcset="./assets/header-suhas-remember-rocket-960.png 960w, ./assets/header-suhas-remember-rocket-1400.png 1400w, ./assets/header-suhas-remember-rocket.png 1870w"
-                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 160px, 1040px)"
+                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 96px, 1400px)"
               />
               <img
                 class="header-art"
@@ -205,6 +205,7 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=remember-rocket-2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" defer></script>
+    <script src="./app.js?v=supabase-1" defer></script>
   </body>
 </html>

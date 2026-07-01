@@ -158,18 +158,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 
 .app-header {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  justify-items: stretch;
-  gap: 8px;
   min-width: 0;
   max-width: 100%;
 }
 
 .header-art-frame {
   position: relative;
-  width: min(100%, 1040px, calc(34svh * 1870 / 841));
+  width: 100%;
   min-width: 0;
   aspect-ratio: 1870 / 841;
   border-radius: clamp(22px, 2.6vw, 38px);
@@ -223,12 +218,13 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 }
 
 .header-actions {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  top: clamp(10px, 2.2vw, 22px);
+  right: clamp(10px, 2.2vw, 22px);
+  z-index: 3;
   display: flex;
   flex-direction: row;
   gap: clamp(8px, 1.1vw, 12px);
-  justify-self: end;
   padding: clamp(6px, .8vw, 10px);
   border: 3px solid rgba(255, 255, 255, .52);
   border-radius: 999px;
@@ -742,19 +738,6 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px), (orientation: portrait) {
-  .app-header {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: stretch;
-  }
-  .header-art-frame {
-    width: 100%;
-    justify-self: center;
-  }
-  .header-actions {
-    justify-self: end;
-    flex-direction: row;
-    margin-top: -2px;
-  }
   .round-action { width: clamp(46px, 7vw, 64px); }
   .category-rail {
     grid-template-columns: none;

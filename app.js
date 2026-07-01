@@ -2,6 +2,12 @@ const STORAGE_KEY = "suhas-memory-pad-memories-v3";
 const remindersWithDateInput = new Set(["daily", "yearly", "custom"]);
 const SPEECH_DELAY_MS = 120;
 
+const SUPABASE_URL = "https://ugsklcipzyiogxynshnh.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Lrxh3RceGcj7g5JEefze_g_R-bMtAn3";
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
 const iconMap = {
   ball: "⚽",
   trophy: "🏆",
@@ -104,9 +110,7 @@ let soundOn = true;
 let audioContext = null;
 let speechTimer = 0;
 let activeDueMemory = null;
-let memories = loadMemories();
-memories = memories.map(normalizeMemory);
-saveMemories();
+let memories = loadLocalCache().map(normalizeMemory);
 
 const input = document.querySelector("#memoryInput");
 const addButton = document.querySelector("#addButton");
@@ -148,6 +152,7 @@ updateSchedulePanel();
 updatePictureBadge();
 checkDueMemories();
 setInterval(checkDueMemories, 30000);
+initMemories();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -316,17 +321,109 @@ function inferIconFromText(text) {
   return match?.icon || null;
 }
 
-function loadMemories() {
+function loadLocalCache() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) && saved.length ? saved : seedMemories;
+    return Array.isArray(saved) ? saved : [];
   } catch {
-    return seedMemories;
+    return [];
   }
 }
 
-function saveMemories() {
+function saveLocalCache() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+}
+
+/* ---------- Supabase sync ---------- */
+function toDbRow(memory) {
+  return {
+    id: memory.id,
+    text: memory.text,
+    icon: memory.icon,
+    reminder: memory.reminder,
+    repeat: memory.repeat,
+    done: memory.done,
+    created_at: memory.createdAt,
+    due_at: memory.dueAt,
+    custom_at: memory.customAt,
+    notified_for_due_at: memory.notifiedForDueAt,
+  };
+}
+
+function fromDbRow(row) {
+  return normalizeMemory({
+    id: row.id,
+    text: row.text,
+    icon: row.icon,
+    reminder: row.reminder,
+    repeat: row.repeat,
+    done: row.done,
+    createdAt: row.created_at,
+    dueAt: row.due_at,
+    customAt: row.custom_at,
+    notifiedForDueAt: row.notified_for_due_at,
+  });
+}
+
+async function initMemories() {
+  if (!supabaseClient) {
+    if (!memories.length) {
+      memories = seedMemories.map(normalizeMemory);
+      saveLocalCache();
+      renderMemories();
+    }
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("memories")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    if (data.length === 0) {
+      const inserted = await supabaseClient.from("memories").insert(seedMemories.map(toDbRow)).select();
+      memories = (inserted.data || seedMemories).map((row) => (row.id ? fromDbRow(row) : normalizeMemory(row)));
+    } else {
+      memories = data.map(fromDbRow);
+    }
+    saveLocalCache();
+    renderMemories();
+    updateSchedulePanel();
+    checkDueMemories();
+  } catch (err) {
+    console.warn("Could not reach Suhas Memory Pad online storage", err);
+    if (!memories.length) {
+      memories = seedMemories.map(normalizeMemory);
+      renderMemories();
+    }
+    showToast("Offline — showing saved memories");
+  }
+}
+
+function syncInsert(memory) {
+  if (!supabaseClient) return;
+  supabaseClient.from("memories").insert(toDbRow(memory)).then(({ error }) => {
+    if (error) {
+      console.warn("Could not save memory online", error);
+      showToast("Saved on this device only");
+    }
+  });
+}
+
+function syncUpdate(memory) {
+  if (!supabaseClient) return;
+  supabaseClient.from("memories").update(toDbRow(memory)).eq("id", memory.id).then(({ error }) => {
+    if (error) console.warn("Could not sync memory update", error);
+  });
+}
+
+function syncDelete(id) {
+  if (!supabaseClient) return;
+  supabaseClient.from("memories").delete().eq("id", id).then(({ error }) => {
+    if (error) console.warn("Could not sync memory delete", error);
+  });
 }
 
 function addMemory() {
@@ -354,7 +451,7 @@ function addMemory() {
   const memoryIcon = userPickedIcon ? selectedIcon : inferIconFromText(text) || selectedIcon;
   const memory = makeMemory(text, memoryIcon, selectedReminder, false, pickedDate);
   memories.unshift(memory);
-  saveMemories();
+  saveLocalCache();
   renderMemories();
   memoryList.scrollTo({ left: 0, behavior: "smooth" });
   launchComet(iconMap[memory.icon]);
@@ -369,6 +466,7 @@ function addMemory() {
   updatePictureBadge();
   input.focus();
   checkDueMemories();
+  syncInsert(memory);
 }
 
 /* ---------- Render memories ---------- */
@@ -404,12 +502,14 @@ function renderMemories() {
       const card = button.closest(".memory-card");
       if (card) card.classList.add("is-removing");
       buzz(14);
+      const id = button.dataset.delete;
       setTimeout(() => {
-        memories = memories.filter((item) => item.id !== button.dataset.delete);
-        saveMemories();
+        memories = memories.filter((item) => item.id !== id);
+        saveLocalCache();
         renderMemories();
         checkDueMemories();
         showToast("Memory removed");
+        syncDelete(id);
       }, 360);
     });
   });
@@ -426,11 +526,12 @@ function completeMemory(id, originEl, launch = false) {
 
   const finish = () => {
     if (!repeatMessage) memory.done = !memory.done;
-    saveMemories();
+    saveLocalCache();
     renderMemories();
     checkDueMemories();
     if (card) burstConfetti(card);
     showToast(repeatMessage || (memory.done ? "Yay! Marked done" : "Back in memories"));
+    syncUpdate(memory);
   };
 
   if (launch && card && !memory.done && !repeatMessage) {
@@ -800,7 +901,8 @@ function checkDueMemories() {
   if ("Notification" in window && Notification.permission === "granted" && activeDueMemory.notifiedForDueAt !== activeDueMemory.dueAt) {
     new Notification("Suhas Remember Rocket", { body: activeDueMemory.text, icon: "./assets/memory-pad-icon.svg" });
     activeDueMemory.notifiedForDueAt = activeDueMemory.dueAt;
-    saveMemories();
+    saveLocalCache();
+    syncUpdate(activeDueMemory);
   }
 }
 function isDue(memory) {
