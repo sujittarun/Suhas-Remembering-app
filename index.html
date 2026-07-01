@@ -9,7 +9,7 @@
     <title>Suhas Remember Rocket</title>
     <link rel="icon" href="./assets/memory-pad-icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./styles.css?v=remember-rocket-2" />
+    <link rel="stylesheet" href="./styles.css?v=wide-header-1" />
   </head>
   <body>
     <div class="sky" aria-hidden="true">
@@ -39,13 +39,13 @@
           <div class="header-art-frame">
             <picture>
               <source
-                srcset="./assets/header-suhas-remember-rocket-960.png 960w, ./assets/header-suhas-remember-rocket-1400.png 1400w, ./assets/header-suhas-remember-rocket.png 1870w"
-                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 96px, 1400px)"
+                srcset="./assets/header-suhas-remember-rocket-wide-960.png 960w, ./assets/header-suhas-remember-rocket-wide-1600.png 1600w, ./assets/header-suhas-remember-rocket-wide.png 2400w"
+                sizes="(orientation: portrait) calc(100vw - 48px), min(78vw, 900px)"
               />
               <img
                 class="header-art"
-                src="./assets/header-suhas-remember-rocket-1400.png"
-                width="1870"
+                src="./assets/header-suhas-remember-rocket-wide-1600.png"
+                width="2400"
                 height="841"
                 alt=""
                 aria-hidden="true"
@@ -206,6 +206,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" defer></script>
-    <script src="./app.js?v=supabase-1" defer></script>
+    <script src="./app.js?v=supabase-1-wide-header-1" defer></script>
   </body>
 </html>

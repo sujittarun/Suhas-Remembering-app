@@ -159,7 +159,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 .app-header {
   position: relative;
   min-width: 0;
-  max-width: min(38%, 480px, calc(20.5svh * 1870 / 841));
+  max-width: min(78%, 900px, calc(20.5svh * 3.6));
   margin-inline: auto;
 }
 
@@ -167,7 +167,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
   position: relative;
   width: 100%;
   min-width: 0;
-  aspect-ratio: 1870 / 841;
+  aspect-ratio: 3.6 / 1;
   border-radius: clamp(22px, 2.6vw, 38px);
   overflow: hidden;
   background: #0669e7;
@@ -215,6 +215,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 
 .header-art {
   object-fit: cover;
+  object-position: center center;
   filter: saturate(1.06) contrast(1.03);
 }
 
@@ -740,6 +741,8 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px), (orientation: portrait) {
   .app-header { max-width: 100%; margin-inline: 0; }
+  .header-art-frame { aspect-ratio: 1870 / 841; }
+  .header-art { object-position: left center; }
   .round-action { width: clamp(46px, 7vw, 64px); }
   .category-rail {
     grid-template-columns: none;

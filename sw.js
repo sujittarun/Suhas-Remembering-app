@@ -1,13 +1,13 @@
-const CACHE_NAME = "suhas-remember-rocket-v1";
+const CACHE_NAME = "suhas-remember-rocket-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",
-  "./assets/header-suhas-remember-rocket-960.png",
-  "./assets/header-suhas-remember-rocket-1400.png",
-  "./assets/header-suhas-remember-rocket.png",
+  "./assets/header-suhas-remember-rocket-wide-960.png",
+  "./assets/header-suhas-remember-rocket-wide-1600.png",
+  "./assets/header-suhas-remember-rocket-wide.png",
   "./assets/memory-pad-icon.svg",
 ];
 
