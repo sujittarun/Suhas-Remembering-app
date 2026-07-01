@@ -1,4 +1,5 @@
 const STORAGE_KEY = "suhas-memory-pad-memories-v2";
+const remindersWithDateInput = new Set(["daily", "yearly", "custom"]);
 
 const iconMap = {
   tooth: "🪥",
@@ -69,14 +70,14 @@ const pictureRules = [
 ];
 
 const seedMemories = [
-  makeMemory("Blue school cap", "cap", "today", false),
-  makeMemory("Brush teeth", "tooth", "bedtime", false),
+  makeMemory("Blue school cap", "cap", "none", false),
+  makeMemory("Brush teeth", "tooth", "daily", false, nextDefaultScheduleDate("daily")),
   makeMemory("Pack cricket bat", "cricket", "tomorrow", false),
   makeMemory("Water bottle", "bottle", "today", false),
 ];
 
 let selectedIcon = "cap";
-let selectedReminder = "today";
+let selectedReminder = "none";
 let soundOn = true;
 let activeDueMemory = null;
 let memories = loadMemories();
@@ -89,6 +90,9 @@ const memoryList = document.querySelector("#memoryList");
 const memoryCount = document.querySelector("#memoryCount");
 const iconButtons = [...document.querySelectorAll(".icon-chip")];
 const timeButtons = [...document.querySelectorAll(".time-tile")];
+const schedulePanel = document.querySelector("#schedulePanel");
+const scheduleLabel = document.querySelector("#scheduleLabel");
+const customDateTime = document.querySelector("#customDateTime");
 const toast = document.querySelector("#toast");
 const micButton = document.querySelector("#micButton");
 const soundButton = document.querySelector("#soundButton");
@@ -104,6 +108,7 @@ const recallResults = document.querySelector("#recallResults");
 const appShell = document.querySelector("#appShell");
 
 renderMemories();
+updateSchedulePanel();
 checkDueMemories();
 setInterval(checkDueMemories, 30000);
 
@@ -125,8 +130,13 @@ timeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     selectedReminder = button.dataset.reminder;
     timeButtons.forEach((item) => item.classList.toggle("is-selected", item === button));
+    updateSchedulePanel();
     chirp(620, 0.05);
   });
+});
+
+customDateTime.addEventListener("change", () => {
+  chirp(700, 0.04);
 });
 
 addButton.addEventListener("click", addMemory);
@@ -205,23 +215,41 @@ function startVoiceInput(targetInput, targetButton, onResult) {
   recognition.start();
 }
 
-function makeMemory(text, icon, reminder, done) {
+function makeMemory(text, icon, reminder, done, pickedDate = null) {
   const autoIcon = inferIconFromText(text);
+  const normalizedReminder = normalizeReminder(reminder);
   return {
     id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
     text,
     icon: autoIcon || icon,
-    reminder,
+    reminder: normalizedReminder,
+    repeat: getRepeatRule(normalizedReminder),
     done,
     createdAt: new Date().toISOString(),
-    dueAt: getDueDate(reminder),
+    dueAt: getDueDate(normalizedReminder, pickedDate),
+    customAt: pickedDate ? pickedDate.toISOString() : null,
+    notifiedForDueAt: null,
   };
 }
 
 function normalizeMemory(memory) {
   const autoIcon = inferIconFromText(memory.text);
-  if (!autoIcon || autoIcon === memory.icon) return memory;
-  return { ...memory, icon: autoIcon };
+  const reminder = normalizeReminder(memory.reminder);
+  const repeat = memory.repeat || getRepeatRule(reminder);
+  const customAt = memory.customAt || null;
+  const dueAt = reminder === "none"
+    ? null
+    : memory.dueAt || getDueDate(reminder, customAt ? new Date(customAt) : null);
+
+  return {
+    ...memory,
+    icon: autoIcon || memory.icon || "star",
+    reminder,
+    repeat,
+    dueAt,
+    customAt,
+    notifiedForDueAt: memory.notifiedForDueAt || memory.notifiedAt || null,
+  };
 }
 
 function inferIconFromText(text) {
@@ -254,7 +282,20 @@ function addMemory() {
     return;
   }
 
-  const memory = makeMemory(text, selectedIcon, selectedReminder, false);
+  const pickedDate = getPickedScheduleDate();
+  if (remindersWithDateInput.has(selectedReminder) && !pickedDate) {
+    showToast("Pick a date and time");
+    customDateTime.focus();
+    return;
+  }
+
+  if (selectedReminder === "custom" && pickedDate <= new Date()) {
+    showToast("Pick a future time");
+    customDateTime.focus();
+    return;
+  }
+
+  const memory = makeMemory(text, selectedIcon, selectedReminder, false, pickedDate);
   memories.unshift(memory);
   saveMemories();
   renderMemories();
@@ -288,12 +329,15 @@ function renderMemories() {
     button.addEventListener("click", () => {
       const memory = memories.find((item) => item.id === button.dataset.done);
       if (!memory) return;
-      memory.done = !memory.done;
+      const repeatMessage = completeRepeatingMemory(memory);
+      if (!repeatMessage) {
+        memory.done = !memory.done;
+      }
       saveMemories();
       renderMemories();
       checkDueMemories();
       burstConfetti(button);
-      showToast(memory.done ? "Nice. Marked done" : "Back in memories");
+      showToast(repeatMessage || (memory.done ? "Nice. Marked done" : "Back in memories"));
     });
   });
 
@@ -360,8 +404,13 @@ function closeRecall() {
 function renderRecall(query) {
   const cleanQuery = query.trim().toLowerCase();
   const results = memories.filter((memory) => {
-    if (!cleanQuery) return memory.reminder === "ask" || isDue(memory) || !memory.done;
-    return memory.text.toLowerCase().includes(cleanQuery) || memory.reminder.includes(cleanQuery);
+    if (!cleanQuery) return memory.reminder === "none" || isDue(memory) || !memory.done;
+    const reminderLabel = describeReminder(memory).toLowerCase();
+    return (
+      memory.text.toLowerCase().includes(cleanQuery) ||
+      memory.reminder.includes(cleanQuery) ||
+      reminderLabel.includes(cleanQuery)
+    );
   });
 
   recallResults.innerHTML = results.length
@@ -386,17 +435,107 @@ function renderRecall(query) {
   });
 }
 
-function getDueDate(reminder) {
+function updateSchedulePanel() {
+  const needsDate = remindersWithDateInput.has(selectedReminder);
+  schedulePanel.hidden = !needsDate;
+  if (!needsDate) return;
+
+  scheduleLabel.textContent = getScheduleLabel(selectedReminder);
+  if (!customDateTime.value) {
+    customDateTime.value = toDateTimeLocalValue(nextDefaultScheduleDate(selectedReminder));
+  }
+}
+
+function getScheduleLabel(reminder) {
+  if (reminder === "daily") return "Daily reminder time";
+  if (reminder === "yearly") return "Yearly reminder day";
+  return "Pick date and time";
+}
+
+function getPickedScheduleDate() {
+  if (!customDateTime.value) return null;
+  const date = new Date(customDateTime.value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizeReminder(reminder) {
+  if (!reminder || reminder === "ask") return "none";
+  if (["none", "today", "tomorrow", "bedtime", "daily", "yearly", "custom"].includes(reminder)) {
+    return reminder;
+  }
+  return "none";
+}
+
+function getRepeatRule(reminder) {
+  if (reminder === "daily") return "daily";
+  if (reminder === "yearly") return "yearly";
+  return "none";
+}
+
+function nextDefaultScheduleDate(reminder) {
   const date = new Date();
-  if (reminder === "ask") return null;
+  if (reminder === "daily") {
+    date.setHours(8, 0, 0, 0);
+    if (date <= new Date()) date.setDate(date.getDate() + 1);
+    return date;
+  }
+
+  date.setMinutes(date.getMinutes() + 15);
+  date.setSeconds(0, 0);
+  return date;
+}
+
+function completeRepeatingMemory(memory) {
+  if (memory.repeat !== "daily" && memory.repeat !== "yearly") return "";
+  memory.done = false;
+  memory.dueAt = getNextRepeatDate(memory);
+  memory.notifiedForDueAt = null;
+  memory.customAt = memory.dueAt;
+  return memory.repeat === "daily" ? "Next daily reminder set" : "Next yearly reminder set";
+}
+
+function getNextRepeatDate(memory) {
+  const fromDate = memory.dueAt ? new Date(memory.dueAt) : nextDefaultScheduleDate(memory.repeat);
+  if (memory.repeat === "daily") fromDate.setDate(fromDate.getDate() + 1);
+  if (memory.repeat === "yearly") fromDate.setFullYear(fromDate.getFullYear() + 1);
+  return rollDateForward(fromDate, memory.repeat).toISOString();
+}
+
+function rollDateForward(date, repeat) {
+  const rolled = new Date(date);
+  const now = new Date();
+  if (Number.isNaN(rolled.getTime())) return nextDefaultScheduleDate(repeat);
+
+  while (rolled <= now) {
+    if (repeat === "daily") rolled.setDate(rolled.getDate() + 1);
+    if (repeat === "yearly") rolled.setFullYear(rolled.getFullYear() + 1);
+  }
+
+  return rolled;
+}
+
+function toDateTimeLocalValue(date) {
+  const value = new Date(date);
+  const pad = (number) => String(number).padStart(2, "0");
+  return [
+    value.getFullYear(),
+    pad(value.getMonth() + 1),
+    pad(value.getDate()),
+  ].join("-") + `T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+}
+
+function getDueDate(reminder, pickedDate = null) {
+  const date = pickedDate ? new Date(pickedDate) : new Date();
+  const now = new Date();
+  if (reminder === "none" || reminder === "ask") return null;
 
   if (reminder === "today") {
-    date.setMinutes(date.getMinutes() + 15);
+    date.setMinutes(now.getMinutes() + 15);
     return date.toISOString();
   }
 
   if (reminder === "tomorrow") {
-    date.setDate(date.getDate() + 1);
+    date.setDate(now.getDate() + 1);
     date.setHours(8, 0, 0, 0);
     return date.toISOString();
   }
@@ -407,22 +546,70 @@ function getDueDate(reminder) {
     return date.toISOString();
   }
 
+  if (reminder === "custom") {
+    return pickedDate ? date.toISOString() : null;
+  }
+
+  if (reminder === "daily") {
+    return rollDateForward(date, "daily").toISOString();
+  }
+
+  if (reminder === "yearly") {
+    return rollDateForward(date, "yearly").toISOString();
+  }
+
   return null;
 }
 
 function describeReminder(memory) {
-  if (memory.reminder === "ask") return "When I Ask";
+  if (memory.reminder === "none" || memory.reminder === "ask") return "Just saved";
   if (memory.reminder === "today") return "Today";
   if (memory.reminder === "tomorrow") return "Tomorrow";
   if (memory.reminder === "bedtime") return "Bedtime";
+  if (memory.reminder === "daily") return `Daily${formatTime(memory.dueAt)}`;
+  if (memory.reminder === "yearly") return `Yearly${formatMonthDay(memory.dueAt)}`;
+  if (memory.reminder === "custom") return formatDateTime(memory.dueAt);
   return "Saved";
 }
 
 function timeIcon(reminder) {
+  if (reminder === "none" || reminder === "ask") return "⭐";
   if (reminder === "today") return "☀️";
   if (reminder === "tomorrow") return "🌅";
   if (reminder === "bedtime") return "🌙";
-  return "💬";
+  if (reminder === "daily") return "🔁";
+  if (reminder === "yearly") return "🎂";
+  if (reminder === "custom") return "⏰";
+  return "⭐";
+}
+
+function formatTime(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "";
+  return ` at ${new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date)}`;
+}
+
+function formatMonthDay(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "";
+  return ` on ${new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  }).format(date)}`;
+}
+
+function formatDateTime(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "Pick Time";
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function checkDueMemories() {
@@ -435,12 +622,16 @@ function checkDueMemories() {
   dueText.textContent = `Time for ${activeDueMemory.text}`;
   dueBanner.hidden = false;
 
-  if ("Notification" in window && Notification.permission === "granted" && !activeDueMemory.notifiedAt) {
+  if (
+    "Notification" in window &&
+    Notification.permission === "granted" &&
+    activeDueMemory.notifiedForDueAt !== activeDueMemory.dueAt
+  ) {
     new Notification("Suhas Memory Pad", {
       body: activeDueMemory.text,
       icon: "./assets/memory-pad-icon.svg",
     });
-    activeDueMemory.notifiedAt = new Date().toISOString();
+    activeDueMemory.notifiedForDueAt = activeDueMemory.dueAt;
     saveMemories();
   }
 }

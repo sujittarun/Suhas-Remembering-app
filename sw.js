@@ -1,4 +1,4 @@
-const CACHE_NAME = "suhas-memory-pad-v1";
+const CACHE_NAME = "suhas-memory-pad-v3";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -7,8 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Suhas Memory Pad" />
     <title>Suhas Memory Pad</title>
+    <link rel="icon" href="./assets/memory-pad-icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./styles.css?v=tablet-redesign-1" />
+    <link rel="stylesheet" href="./styles.css?v=tablet-redesign-3" />
   </head>
   <body>
     <div class="sky" aria-hidden="true">
@@ -34,9 +35,24 @@
             <div class="brand-mascot-frame" aria-hidden="true">
               <span class="mascot-face">🧠</span>
             </div>
-            <span class="brand-star" aria-hidden="true">★</span>
-            <h1 id="appTitle">Suhas Memory Pad</h1>
-            <span class="flight-line" aria-hidden="true"></span>
+            <div class="brand-copy">
+              <h1 id="appTitle">
+                <span>Suhas</span>
+                <span>Memory Pad</span>
+              </h1>
+              <div class="brand-sparks" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="memory-orbit" aria-hidden="true">
+              <span class="orbit-ring"></span>
+              <span class="orbit-icon orbit-icon-a">☀️</span>
+              <span class="orbit-icon orbit-icon-b">🔁</span>
+              <span class="orbit-icon orbit-icon-c">🎂</span>
+              <span class="orbit-rocket"></span>
+            </div>
           </div>
           <div class="header-actions">
             <button class="round-action" id="soundButton" type="button" aria-pressed="true" aria-label="Turn voice on or off">
@@ -95,7 +111,11 @@
               </div>
 
               <div class="time-grid" aria-label="Choose reminder time">
-                <button class="time-tile is-selected" type="button" data-reminder="today">
+                <button class="time-tile is-selected" type="button" data-reminder="none">
+                  <span class="tile-art save-art"></span>
+                  <strong>Just Save</strong>
+                </button>
+                <button class="time-tile" type="button" data-reminder="today">
                   <span class="tile-art sun-art"></span>
                   <strong>Today</strong>
                 </button>
@@ -107,10 +127,26 @@
                   <span class="tile-art moon-art"></span>
                   <strong>Bedtime</strong>
                 </button>
-                <button class="time-tile" type="button" data-reminder="ask">
-                  <span class="tile-art ask-art"></span>
-                  <strong>When I Ask</strong>
+                <button class="time-tile" type="button" data-reminder="daily">
+                  <span class="tile-art daily-art"></span>
+                  <strong>Daily</strong>
                 </button>
+                <button class="time-tile" type="button" data-reminder="yearly">
+                  <span class="tile-art yearly-art"></span>
+                  <strong>Yearly</strong>
+                </button>
+                <button class="time-tile" type="button" data-reminder="custom">
+                  <span class="tile-art custom-art"></span>
+                  <strong>Pick Time</strong>
+                </button>
+              </div>
+
+              <div class="schedule-panel" id="schedulePanel" hidden>
+                <label id="scheduleLabel" for="customDateTime">Pick date and time</label>
+                <div class="schedule-input-wrap">
+                  <span aria-hidden="true">⏰</span>
+                  <input id="customDateTime" type="datetime-local" aria-label="Pick reminder date and time" />
+                </div>
               </div>
 
               <button class="add-button" id="addButton" type="button">
@@ -180,6 +216,6 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=tablet-redesign-1" defer></script>
+    <script src="./app.js?v=tablet-redesign-3" defer></script>
   </body>
 </html>
