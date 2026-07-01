@@ -107,7 +107,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
   margin: 0 auto;
   padding: max(14px, env(safe-area-inset-top)) clamp(12px, 2vw, 26px) max(16px, env(safe-area-inset-bottom));
   display: grid;
-  place-items: center;
+  place-items: start center;
   perspective: 1600px;
 }
 
@@ -158,17 +158,20 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 
 .app-header {
   position: relative;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  justify-items: stretch;
+  gap: 8px;
   min-width: 0;
   max-width: 100%;
 }
 
 .header-art-frame {
   position: relative;
-  width: min(100%, 1180px, calc(52svh * 1857 / 847));
+  width: min(100%, 1040px, calc(34svh * 1870 / 841));
   min-width: 0;
-  aspect-ratio: 1857 / 847;
+  aspect-ratio: 1870 / 841;
   border-radius: clamp(22px, 2.6vw, 38px);
   overflow: hidden;
   background: #0669e7;
@@ -220,19 +223,26 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 }
 
 .header-actions {
-  position: absolute;
-  top: 7.4%;
-  right: 1.8%;
-  z-index: 3;
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: row;
-  gap: clamp(8px, 1.3vw, 18px);
+  gap: clamp(8px, 1.1vw, 12px);
+  justify-self: end;
+  padding: clamp(6px, .8vw, 10px);
+  border: 3px solid rgba(255, 255, 255, .52);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 40% 10%, rgba(255, 255, 255, .5), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .1));
+  box-shadow: 0 16px 30px rgba(0, 55, 160, .18), inset 0 1px 0 rgba(255, 255, 255, .62);
+  backdrop-filter: blur(10px);
 }
 
 .round-action {
   display: grid;
   place-items: center;
-  width: clamp(46px, 5.8vw, 84px);
+  width: clamp(48px, 5vw, 66px);
   aspect-ratio: 1;
   border: clamp(3px, .42vw, 7px) solid rgba(255, 255, 255, .92);
   border-radius: 50%;
@@ -732,8 +742,20 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px), (orientation: portrait) {
-  .header-art-frame { width: 100%; }
-  .round-action { width: clamp(44px, 7vw, 64px); }
+  .app-header {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+  .header-art-frame {
+    width: 100%;
+    justify-self: center;
+  }
+  .header-actions {
+    justify-self: end;
+    flex-direction: row;
+    margin-top: -2px;
+  }
+  .round-action { width: clamp(46px, 7vw, 64px); }
   .category-rail {
     grid-template-columns: none;
     grid-auto-flow: column;
@@ -750,7 +772,7 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 @media (max-width: 620px) {
   .device-card { border-radius: 30px; padding: 16px; }
   .header-art-frame { border-radius: 24px; }
-  .header-actions { top: 5%; right: 2%; gap: 6px; }
+  .header-actions { gap: 6px; padding: 6px; }
   .round-action { min-width: 40px; }
   .memory-card { flex-basis: 78vw; }
   .add-button { min-width: 100%; }

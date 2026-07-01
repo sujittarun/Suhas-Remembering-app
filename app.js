@@ -1,5 +1,6 @@
 const STORAGE_KEY = "suhas-memory-pad-memories-v3";
 const remindersWithDateInput = new Set(["daily", "yearly", "custom"]);
+const SPEECH_DELAY_MS = 120;
 
 const iconMap = {
   ball: "⚽",
@@ -100,6 +101,8 @@ let selectedIcon = "star";
 let userPickedIcon = false;
 let selectedReminder = "none";
 let soundOn = true;
+let audioContext = null;
+let speechTimer = 0;
 let activeDueMemory = null;
 let memories = loadMemories();
 memories = memories.map(normalizeMemory);
@@ -191,6 +194,10 @@ input.addEventListener("keydown", (event) => {
 soundButton.addEventListener("click", () => {
   soundOn = !soundOn;
   soundButton.setAttribute("aria-pressed", String(soundOn));
+  if (!soundOn) {
+    clearTimeout(speechTimer);
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+  }
   showToast(soundOn ? "Voice is on" : "Voice is off");
 });
 bellButton.addEventListener("click", requestNotifications);
@@ -344,7 +351,8 @@ function addMemory() {
     return;
   }
 
-  const memory = makeMemory(text, selectedIcon, selectedReminder, false, pickedDate);
+  const memoryIcon = userPickedIcon ? selectedIcon : inferIconFromText(text) || selectedIcon;
+  const memory = makeMemory(text, memoryIcon, selectedReminder, false, pickedDate);
   memories.unshift(memory);
   saveMemories();
   renderMemories();
@@ -790,7 +798,7 @@ function checkDueMemories() {
   dueText.textContent = `Time for ${activeDueMemory.text}`;
   dueBanner.hidden = false;
   if ("Notification" in window && Notification.permission === "granted" && activeDueMemory.notifiedForDueAt !== activeDueMemory.dueAt) {
-    new Notification("Suhas Memory Pad", { body: activeDueMemory.text, icon: "./assets/memory-pad-icon.svg" });
+    new Notification("Suhas Remember Rocket", { body: activeDueMemory.text, icon: "./assets/memory-pad-icon.svg" });
     activeDueMemory.notifiedForDueAt = activeDueMemory.dueAt;
     saveMemories();
   }
@@ -809,17 +817,23 @@ async function requestNotifications() {
 /* ---------- Sound + feedback ---------- */
 function speak(text) {
   if (!soundOn || !("speechSynthesis" in window)) return;
+  clearTimeout(speechTimer);
   speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.92;
-  utterance.pitch = 1.18;
-  speechSynthesis.speak(utterance);
+  speechTimer = setTimeout(() => {
+    if (!soundOn) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.92;
+    utterance.pitch = 1.18;
+    speechSynthesis.speak(utterance);
+  }, SPEECH_DELAY_MS);
 }
 function chirp(frequency, duration) {
   if (!soundOn) return;
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return;
-  const audio = new AudioContext();
+  audioContext ||= new AudioContext();
+  if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+  const audio = audioContext;
   const oscillator = audio.createOscillator();
   const gain = audio.createGain();
   oscillator.frequency.value = frequency;

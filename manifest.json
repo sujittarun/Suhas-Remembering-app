@@ -1,6 +1,6 @@
 {
-  "name": "Suhas Memory Pad",
-  "short_name": "Memory Pad",
+  "name": "Suhas Remember Rocket",
+  "short_name": "Remember Rocket",
   "description": "A playful tablet app for kids to save and recall things they do not want to forget.",
   "start_url": "./index.html",
   "display": "standalone",

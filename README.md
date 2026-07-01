@@ -1,4 +1,4 @@
-# Suhas Memory Pad
+# Suhas Remember Rocket
 
 A playful tablet-first remembering app for a 6-year-old. It runs as a web app, saves memories in the browser, and includes animated graphics, voice playback, optional voice input, optional browser notifications, and an offline-ready service worker.
 

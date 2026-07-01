@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#22a7ff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Suhas Memory Pad" />
-    <title>Suhas Memory Pad</title>
+    <meta name="apple-mobile-web-app-title" content="Suhas Remember Rocket" />
+    <title>Suhas Remember Rocket</title>
     <link rel="icon" href="./assets/memory-pad-icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./styles.css?v=header-art-1" />
+    <link rel="stylesheet" href="./styles.css?v=remember-rocket-2" />
   </head>
   <body>
     <div class="sky" aria-hidden="true">
@@ -35,40 +35,40 @@
     <main class="app-shell" id="appShell">
       <section class="device-card" id="deviceCard" aria-labelledby="appTitle">
         <header class="app-header">
-          <h1 id="appTitle" class="sr-only">Suhas Memory Pad</h1>
+          <h1 id="appTitle" class="sr-only">Suhas Remember Rocket</h1>
           <div class="header-art-frame">
             <picture>
               <source
-                srcset="./assets/header-suhas-memory-pad-960.png 960w, ./assets/header-suhas-memory-pad-1400.png 1400w, ./assets/header-suhas-memory-pad.png 1857w"
-                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 80px, 960px)"
+                srcset="./assets/header-suhas-remember-rocket-960.png 960w, ./assets/header-suhas-remember-rocket-1400.png 1400w, ./assets/header-suhas-remember-rocket.png 1870w"
+                sizes="(orientation: portrait) calc(100vw - 48px), min(100vw - 160px, 1040px)"
               />
               <img
                 class="header-art"
-                src="./assets/header-suhas-memory-pad-1400.png"
-                width="1857"
-                height="847"
+                src="./assets/header-suhas-remember-rocket-1400.png"
+                width="1870"
+                height="841"
                 alt=""
                 aria-hidden="true"
                 decoding="async"
                 fetchpriority="high"
               />
             </picture>
+          </div>
 
-            <div class="header-actions">
-              <button class="round-action" id="soundButton" type="button" aria-pressed="true" aria-label="Turn voice on or off">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
-                  <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
-                  <path d="M18.8 6.2a8 8 0 0 1 0 11.6"></path>
-                </svg>
-              </button>
-              <button class="round-action" id="bellButton" type="button" aria-label="Turn on reminder bell">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-                  <path d="M10 21h4"></path>
-                </svg>
-              </button>
-            </div>
+          <div class="header-actions" aria-label="App controls">
+            <button class="round-action" id="soundButton" type="button" aria-pressed="true" aria-label="Turn voice on or off">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+                <path d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+                <path d="M18.8 6.2a8 8 0 0 1 0 11.6"></path>
+              </svg>
+            </button>
+            <button class="round-action" id="bellButton" type="button" aria-label="Turn on reminder bell">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                <path d="M10 21h4"></path>
+              </svg>
+            </button>
           </div>
         </header>
 
@@ -205,6 +205,6 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=header-art-1" defer></script>
+    <script src="./app.js?v=remember-rocket-2" defer></script>
   </body>
 </html>
