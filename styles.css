@@ -1150,6 +1150,88 @@ button {
   }
 }
 
+@media (orientation: landscape) and (max-height: 920px) {
+  .app-shell {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .app-header {
+    min-height: 88px;
+    margin-bottom: 12px;
+  }
+
+  .brand-mascot-frame {
+    width: clamp(58px, 6vw, 74px);
+  }
+
+  .brand-strip h1 {
+    font-size: clamp(1.7rem, 3vw, 2.7rem);
+  }
+
+  .round-action {
+    width: clamp(54px, 5.4vw, 68px);
+  }
+
+  .tablet-grid {
+    min-height: auto;
+  }
+
+  .composer-content,
+  .memories-panel {
+    padding: clamp(14px, 1.5vw, 20px);
+  }
+
+  .composer-content {
+    gap: 10px;
+  }
+
+  .section-title h2 {
+    font-size: clamp(1.65rem, 2.5vw, 2.55rem);
+  }
+
+  .title-badge {
+    width: clamp(42px, 4.4vw, 56px);
+  }
+
+  #memoryInput {
+    min-height: 58px;
+  }
+
+  .memory-input-wrap {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .mic-button {
+    width: clamp(56px, 5.2vw, 68px);
+  }
+
+  .icon-chip {
+    min-height: clamp(62px, 7.6svh, 86px);
+  }
+
+  .time-tile {
+    min-height: clamp(76px, 9svh, 100px);
+  }
+
+  .tile-art {
+    width: min(52px, 52%);
+  }
+
+  .add-button {
+    min-height: clamp(64px, 7.4svh, 76px);
+  }
+
+  .memory-card {
+    min-height: clamp(102px, 12.3svh, 126px);
+  }
+
+  .memory-icon {
+    border-radius: 20px;
+  }
+}
+
 @media (max-width: 900px), (orientation: portrait) {
   .app-shell {
     padding-inline: clamp(12px, 3vw, 22px);
