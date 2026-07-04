@@ -111,6 +111,7 @@ let soundOn = true;
 let audioContext = null;
 let speechTimer = 0;
 let activeDueMemory = null;
+let editingMemoryId = null;
 const spokenDueKeys = new Set();
 let memories = loadLocalCache().map(normalizeMemory);
 
@@ -145,6 +146,10 @@ const rocket = document.querySelector("#rocket");
 const headerArtFrame = document.querySelector(".header-art-frame");
 const railPrev = document.querySelector("#railPrev");
 const railNext = document.querySelector("#railNext");
+const editingBanner = document.querySelector("#editingBanner");
+const editingBannerText = document.querySelector("#editingBannerText");
+const cancelEditButton = document.querySelector("#cancelEditButton");
+const buttonLabel = document.querySelector(".button-label");
 const skyFar = document.querySelector(".sky-far");
 const skyNear = document.querySelector(".sky-near");
 
@@ -198,6 +203,7 @@ addButton.addEventListener("click", addMemory);
 input.addEventListener("keydown", (event) => {
   if (event.key === "Enter") addMemory();
 });
+cancelEditButton.addEventListener("click", cancelEditingMemory);
 
 /* ---------- Header actions ---------- */
 soundButton.addEventListener("click", () => {
@@ -453,6 +459,12 @@ function addMemory() {
   }
 
   const memoryIcon = userPickedIcon ? selectedIcon : inferIconFromText(text) || selectedIcon;
+
+  if (editingMemoryId) {
+    saveEditedMemory(text, memoryIcon, pickedDate);
+    return;
+  }
+
   const memory = makeMemory(text, memoryIcon, selectedReminder, false, pickedDate);
   memories.unshift(memory);
   saveLocalCache();
@@ -473,6 +485,99 @@ function addMemory() {
   syncInsert(memory);
 }
 
+/* ---------- Edit an existing memory ---------- */
+function toggleEditMemory(id) {
+  if (editingMemoryId === id) {
+    cancelEditingMemory();
+  } else {
+    startEditingMemory(id);
+  }
+}
+
+function startEditingMemory(id) {
+  const memory = memories.find((item) => item.id === id);
+  if (!memory) return;
+
+  editingMemoryId = id;
+  input.value = memory.text;
+  selectedIcon = memory.icon;
+  userPickedIcon = true;
+  updatePictureBadge();
+
+  selectedReminder = memory.reminder;
+  catTiles.forEach((tile) => tile.classList.toggle("is-selected", tile.dataset.reminder === memory.reminder));
+  customDateTime.value = "";
+  updateSchedulePanel();
+  if (remindersWithDateInput.has(memory.reminder)) {
+    const source = memory.customAt || memory.dueAt;
+    if (source) customDateTime.value = toDateTimeLocalValue(new Date(source));
+  }
+
+  memorySearch.classList.add("is-editing");
+  addButton.classList.add("is-editing");
+  buttonLabel.textContent = "Save changes";
+  editingBanner.hidden = false;
+  editingBannerText.textContent = `Editing "${memory.text}"`;
+
+  memoryList.querySelectorAll(".memory-card").forEach((card) => {
+    card.classList.toggle("is-editing-target", card.dataset.id === id);
+  });
+
+  input.focus();
+  memorySearch.scrollIntoView({ behavior: "smooth", block: "center" });
+  chirp(680, 0.05);
+  buzz(10);
+}
+
+function cancelEditingMemory() {
+  if (!editingMemoryId) return;
+  editingMemoryId = null;
+  input.value = "";
+  selectedIcon = "star";
+  userPickedIcon = false;
+  updatePictureBadge();
+  selectedReminder = "none";
+  catTiles.forEach((tile) => tile.classList.toggle("is-selected", tile.dataset.reminder === "none"));
+  customDateTime.value = "";
+  updateSchedulePanel();
+
+  memorySearch.classList.remove("is-editing");
+  addButton.classList.remove("is-editing");
+  buttonLabel.textContent = "Add Memory";
+  editingBanner.hidden = true;
+
+  memoryList.querySelectorAll(".memory-card.is-editing-target").forEach((card) => {
+    card.classList.remove("is-editing-target");
+  });
+}
+
+function saveEditedMemory(text, icon, pickedDate) {
+  const memory = memories.find((item) => item.id === editingMemoryId);
+  if (!memory) {
+    cancelEditingMemory();
+    return;
+  }
+
+  const newReminder = normalizeReminder(selectedReminder);
+  memory.text = text;
+  memory.icon = icon;
+  memory.reminder = newReminder;
+  memory.repeat = getRepeatRule(newReminder);
+  memory.dueAt = getDueDate(newReminder, pickedDate);
+  memory.customAt = pickedDate ? pickedDate.toISOString() : null;
+  memory.notifiedForDueAt = null;
+
+  saveLocalCache();
+  cancelEditingMemory();
+  renderMemories();
+  checkDueMemories();
+  speak(`Updated ${memory.text}`);
+  showToast("Memory updated");
+  buzz([10, 30, 20]);
+  input.focus();
+  syncUpdate(memory);
+}
+
 /* ---------- Render memories ---------- */
 function renderMemories() {
   const sorted = [...memories].sort((a, b) => {
@@ -488,7 +593,10 @@ function renderMemories() {
   }
   memoryCount.textContent = `${memories.length} ${memories.length === 1 ? "thing" : "things"} saved`;
 
-  memoryList.querySelectorAll(".memory-card").forEach(attachCardGestures);
+  memoryList.querySelectorAll(".memory-card").forEach((card) => {
+    attachCardGestures(card);
+    card.classList.toggle("is-editing-target", card.dataset.id === editingMemoryId);
+  });
 
   memoryList.querySelectorAll("[data-say]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -507,6 +615,7 @@ function renderMemories() {
       if (card) card.classList.add("is-removing");
       buzz(14);
       const id = button.dataset.delete;
+      if (id === editingMemoryId) cancelEditingMemory();
       setTimeout(() => {
         memories = memories.filter((item) => item.id !== id);
         saveLocalCache();
@@ -554,6 +663,7 @@ function memoryTemplate(memory) {
   return `
     <article class="${classes}" data-id="${memory.id}" style="--card-accent: ${accent}">
       <span class="corner-star" aria-hidden="true">⭐</span>
+      <span class="edit-hint" aria-hidden="true">✏️</span>
       <div class="memory-icon" aria-hidden="true">${iconMap[memory.icon] || iconMap.star}</div>
       <div class="memory-main">
         <h3 class="memory-title">${escapeHtml(memory.text)}</h3>
@@ -631,6 +741,7 @@ function attachCardGestures(card) {
   const endDrag = (event) => {
     if (pointerId !== event.pointerId) return;
     const dy = event.clientY - startY;
+    const wasTap = !decided;
     card.style.transition = "";
     if (dragging && dy < -70) {
       const id = card.dataset.id;
@@ -641,6 +752,9 @@ function attachCardGestures(card) {
     } else {
       card.style.transform = "";
       card.style.opacity = "";
+      if (wasTap && !event.target.closest(".card-action")) {
+        toggleEditMemory(card.dataset.id);
+      }
     }
     dragging = false;
     decided = false;

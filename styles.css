@@ -278,6 +278,35 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 }
 .memory-search:focus-within { border-color: #9fd3ff; box-shadow: inset 0 4px 12px rgba(51, 153, 255, .1), 0 16px 28px rgba(7, 73, 158, .16); }
 .memory-search.is-shaking { animation: inputShake .34s ease-in-out; }
+.memory-search.is-editing {
+  border-color: #35bd6c;
+  box-shadow: inset 0 4px 12px rgba(53, 189, 108, .12), 0 14px 24px rgba(53, 189, 108, .22);
+}
+
+.editing-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #eafff2, #d9fbe6);
+  box-shadow: inset 0 0 0 2px rgba(53, 189, 108, .4);
+  color: #1f7a42;
+  font-weight: 700;
+  animation: cardEnter .28s var(--bounce) both;
+}
+.editing-banner[hidden] { display: none; }
+.editing-banner-icon { font-size: 1.2rem; }
+#editingBannerText { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.editing-cancel {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: #fff;
+  background: #ff6f7c;
+  font-weight: 700;
+  font-size: .9rem;
+}
 
 .picture-badge {
   display: grid;
@@ -495,6 +524,23 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 }
 .memory-card.is-due { box-shadow: 0 20px 34px rgba(255, 79, 99, .24), inset 0 0 0 4px rgba(255, 210, 60, .6); }
 .memory-card.is-done { opacity: .58; }
+.memory-card.is-editing-target {
+  box-shadow: 0 20px 34px rgba(53, 189, 108, .3), inset 0 0 0 4px rgba(53, 189, 108, .7);
+  animation: selectedHop .5s var(--spring);
+}
+.memory-card .edit-hint {
+  position: absolute;
+  top: 10px; left: 12px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(53, 189, 108, .14);
+  color: #269e56;
+  font-size: .85rem;
+  opacity: .45;
+  transition: opacity .15s ease;
+}
+.memory-card:hover .edit-hint { opacity: 1; }
 .memory-card.is-launching { animation: cardLaunch .6s var(--bounce) forwards; }
 .memory-card.is-removing { animation: cardRemove .4s ease forwards; }
 
@@ -580,6 +626,12 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
   transform: translateX(-120%);
   animation: buttonShine 3.4s ease-in-out infinite;
 }
+.add-button.is-editing {
+  background: linear-gradient(180deg, #4fd07a, #269e56);
+  box-shadow: inset 0 -10px 0 rgba(10, 90, 40, .2), 0 20px 30px rgba(38, 158, 86, .32);
+  text-shadow: 0 3px 0 rgba(8, 70, 30, .22);
+}
+.add-button.is-editing .button-plus { color: #269e56; }
 .add-button span { position: relative; z-index: 1; }
 .button-plus {
   display: grid; place-items: center;
