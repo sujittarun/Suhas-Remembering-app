@@ -2,12 +2,8 @@ const STORAGE_KEY = "suhas-memory-pad-memories-v3";
 const remindersWithDateInput = new Set(["daily", "yearly", "custom"]);
 const SPEECH_DELAY_MS = 120;
 
-const SUPABASE_URL = "https://ugsklcipzyiogxynshnh.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Lrxh3RceGcj7g5JEefze_g_R-bMtAn3";
+const API_BASE = "https://suhas-remember-rocket.sujittarun.deno.net";
 const VAPID_PUBLIC_KEY = "BKwA35fDJRKOeCVQ2sXjPRDkwlhBXAYXSxsKfxpIYJMl9C-J41fEgly9Z6mgwEVssG7j_plItQEGUIcYsv2L2LI";
-const supabaseClient = window.supabase
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
 
 const iconMap = {
   ball: "⚽",
@@ -132,6 +128,7 @@ const toast = document.querySelector("#toast");
 const micButton = document.querySelector("#micButton");
 const soundButton = document.querySelector("#soundButton");
 const bellButton = document.querySelector("#bellButton");
+const exportButton = document.querySelector("#exportButton");
 const dueBanner = document.querySelector("#dueBanner");
 const dueText = document.querySelector("#dueText");
 const hearDueButton = document.querySelector("#hearDueButton");
@@ -216,6 +213,7 @@ soundButton.addEventListener("click", () => {
   showToast(soundOn ? "Voice is on" : "Voice is off");
 });
 bellButton.addEventListener("click", requestNotifications);
+exportButton.addEventListener("click", exportMemoriesToExcel);
 hearDueButton.addEventListener("click", () => {
   if (activeDueMemory) speak(`Remember ${activeDueMemory.text}`);
 });
@@ -344,66 +342,26 @@ function saveLocalCache() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
 }
 
-/* ---------- Supabase sync ---------- */
-function toDbRow(memory) {
-  return {
-    id: memory.id,
-    text: memory.text,
-    icon: memory.icon,
-    reminder: memory.reminder,
-    repeat: memory.repeat,
-    done: memory.done,
-    created_at: memory.createdAt,
-    due_at: memory.dueAt,
-    custom_at: memory.customAt,
-    notified_for_due_at: memory.notifiedForDueAt,
-  };
-}
-
-function fromDbRow(row) {
-  return normalizeMemory({
-    id: row.id,
-    text: row.text,
-    icon: row.icon,
-    reminder: row.reminder,
-    repeat: row.repeat,
-    done: row.done,
-    createdAt: row.created_at,
-    dueAt: row.due_at,
-    customAt: row.custom_at,
-    notifiedForDueAt: row.notified_for_due_at,
-  });
-}
-
+/* ---------- Backend sync (Deno Deploy API) ---------- */
 async function initMemories() {
-  if (!supabaseClient) {
-    if (!memories.length) {
-      memories = seedMemories.map(normalizeMemory);
-      saveLocalCache();
-      renderMemories();
-    }
-    return;
-  }
-
   try {
-    const { data, error } = await supabaseClient
-      .from("memories")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
+    const response = await fetch(`${API_BASE}/memories`);
+    if (!response.ok) throw new Error(`GET /memories ${response.status}`);
+    const data = await response.json();
 
-    if (data.length === 0) {
-      const inserted = await supabaseClient.from("memories").insert(seedMemories.map(toDbRow)).select();
-      memories = (inserted.data || seedMemories).map((row) => (row.id ? fromDbRow(row) : normalizeMemory(row)));
+    if (data.length === 0 && memories.length === 0) {
+      const seeded = seedMemories.map(normalizeMemory);
+      await Promise.all(seeded.map(syncInsert));
+      memories = seeded;
     } else {
-      memories = data.map(fromDbRow);
+      memories = data.map(normalizeMemory);
     }
     saveLocalCache();
     renderMemories();
     updateSchedulePanel();
     checkDueMemories();
   } catch (err) {
-    console.warn("Could not reach Suhas Memory Pad online storage", err);
+    console.warn("Could not reach Suhas Remember Rocket online storage", err);
     if (!memories.length) {
       memories = seedMemories.map(normalizeMemory);
       renderMemories();
@@ -412,27 +370,31 @@ async function initMemories() {
   }
 }
 
-function syncInsert(memory) {
-  if (!supabaseClient) return;
-  supabaseClient.from("memories").insert(toDbRow(memory)).then(({ error }) => {
-    if (error) {
-      console.warn("Could not save memory online", error);
-      showToast("Saved on this device only");
-    }
-  });
+async function syncInsert(memory) {
+  try {
+    const response = await fetch(`${API_BASE}/memories`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(memory),
+    });
+    if (!response.ok) throw new Error(`POST /memories ${response.status}`);
+  } catch (err) {
+    console.warn("Could not save memory online", err);
+    showToast("Saved on this device only");
+  }
 }
 
 function syncUpdate(memory) {
-  if (!supabaseClient) return;
-  supabaseClient.from("memories").update(toDbRow(memory)).eq("id", memory.id).then(({ error }) => {
-    if (error) console.warn("Could not sync memory update", error);
-  });
+  fetch(`${API_BASE}/memories/${memory.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(memory),
+  }).catch((err) => console.warn("Could not sync memory update", err));
 }
 
 function syncDelete(id) {
-  if (!supabaseClient) return;
-  supabaseClient.from("memories").delete().eq("id", id).then(({ error }) => {
-    if (error) console.warn("Could not sync memory delete", error);
+  fetch(`${API_BASE}/memories/${id}`, { method: "DELETE" }).catch((err) => {
+    console.warn("Could not sync memory delete", err);
   });
 }
 
@@ -1046,9 +1008,34 @@ async function requestNotifications() {
   if (permission === "granted") ensurePushSubscription();
 }
 
+/* ---------- Backup export ---------- */
+function exportMemoriesToExcel() {
+  if (!window.XLSX) {
+    showToast("Export isn't ready yet, try again in a moment");
+    return;
+  }
+  const rows = memories.map((memory) => ({
+    text: memory.text,
+    icon: memory.icon,
+    reminder: memory.reminder,
+    repeat: memory.repeat,
+    done: memory.done,
+    createdAt: memory.createdAt,
+    dueAt: memory.dueAt,
+    customAt: memory.customAt,
+  }));
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "memories");
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(workbook, `suhas-remember-rocket-backup-${today}.xlsx`);
+  showToast("Backup downloaded");
+  buzz(8);
+}
+
 /* ---------- Push notifications (fire even when the tab is closed) ---------- */
 async function ensurePushSubscription(registrationHint) {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !supabaseClient) return;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
   try {
     const registration = registrationHint || (await navigator.serviceWorker.ready);
     let subscription = await registration.pushManager.getSubscription();
@@ -1059,10 +1046,11 @@ async function ensurePushSubscription(registrationHint) {
       });
     }
     const json = subscription.toJSON();
-    await supabaseClient.from("push_subscriptions").upsert(
-      { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
-      { onConflict: "endpoint" }
-    );
+    await fetch(`${API_BASE}/push-subscriptions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth }),
+    });
   } catch (err) {
     console.warn("Could not set up push notifications", err);
   }

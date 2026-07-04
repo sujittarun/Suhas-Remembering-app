@@ -69,6 +69,13 @@
                 <path d="M10 21h4"></path>
               </svg>
             </button>
+            <button class="round-action export-action" id="exportButton" type="button" aria-label="Download a backup of all memories as an Excel file">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12"></path>
+                <path d="M7 10l5 5 5-5"></path>
+                <path d="M4 19h16"></path>
+              </svg>
+            </button>
           </div>
         </header>
 
@@ -211,7 +218,7 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" defer></script>
-    <script src="./app.js?v=supabase-1-wide-header-2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <script src="./app.js?v=deno-deploy-1" defer></script>
   </body>
 </html>

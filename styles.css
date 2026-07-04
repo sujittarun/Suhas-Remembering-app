@@ -258,6 +258,11 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; border: 0; }
 }
 .round-action svg { width: 52%; stroke-width: 2.9; filter: drop-shadow(0 3px 1px rgba(0, 37, 132, .22)); }
 .round-action[aria-pressed="false"], .round-action.is-muted { filter: saturate(.45); opacity: .82; }
+.round-action.export-action {
+  width: clamp(38px, 4vw, 50px);
+  background: linear-gradient(180deg, #cfe3ff, #9dc0f0);
+  opacity: .8;
+}
 
 svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
 

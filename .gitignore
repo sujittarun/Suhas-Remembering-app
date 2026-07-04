@@ -3,3 +3,4 @@
 /docs/implementation-*.png
 /docs/remember-rocket-concept.png
 /supabase/.temp/
+.deno-token
