@@ -90,6 +90,14 @@ Deno.serve(async (req) => {
 
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
 
+  if (parts.length === 0 && req.method === "GET") {
+    return json(
+      { status: "ok", service: "Suhas Remember Rocket API", note: "This is a backend for the app, not a page to open directly." },
+      { status: 200 },
+      origin,
+    );
+  }
+
   try {
     if (parts[0] === "memories" && req.method === "GET" && parts.length === 1) {
       return json(await listMemories(), { status: 200 }, origin);
